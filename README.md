@@ -2,14 +2,6 @@
 
 **Want to improve this cheat sheet?  See the [Contributing](#contributing) section!**
 
-## A Tasteful Plug for Lightbend
-
-I work for [Lightbend](https://lightbend.com) on the [Play](https://playframework.com/) team.  I think the company is awesome, and if you're looking at containers because you're moving to the cloud and thinking about distributed systems, you should keep reading.
-
-Lightbend make microservices happen.  Developers use [Lagom](http://www.lagomframework.com/) to put together resilient ("chaos monkey resistant") microservices.  In production, there's [Conductr](https://conductr.lightbend.com/) to [orchestrate](http://www.cakesolutions.net/teamblogs/typesafe-conductr-the-missing-glue-between-dev-and-ops) containers -- [including Docker](https://www.lightbend.com/blog/reactive-for-devops-part-3-using-docker-with-conductr-on-the-jvm).  Finally, there's [monitoring](https://developer.lightbend.com/docs/monitoring/latest/home.html) to tell you what's going on at a detailed application level, so you know where your CPU and memory resources are being spent, and can scale up and down based on that information.  For more, check out the [devops site](https://www.lightbend.com/platform/production).
-
-This concludes the tasteful plug.
-
 ## Table of Contents
 
 * [Why Docker](#why-docker)
@@ -63,23 +55,12 @@ If you're not willing to run a random shell script, please see the [installation
 
 If you are a complete Docker newbie, you should follow the [series of tutorials](https://docs.docker.com/engine/getstarted/) now.
 
-### Mac OS X
+### macOS
+Download and install [Docker Community Edition](https://www.docker.com/community-edition). if you have Homebrew-Cask, just type `brew cask install docker`. Or Download and install [Docker Toolbox](https://docs.docker.com/toolbox/overview/).  [Docker For Mac](https://docs.docker.com/docker-for-mac/) is nice, but it's not quite as finished as the VirtualBox install.  [See the comparison](https://docs.docker.com/docker-for-mac/docker-toolbox/).
 
-Download and install [Docker Toolbox](https://docs.docker.com/toolbox/overview/).  [Docker For Mac](https://docs.docker.com/docker-for-mac/) is nice, but it's not quite as finished as the VirtualBox install.  [See the comparison](https://docs.docker.com/docker-for-mac/docker-toolbox/).
+> **NOTE** Docker Toolbox is legacy. you should to use Docker Community Edition, See (Docker Toolbox)[https://docs.docker.com/toolbox/overview/]
 
-> **NOTE** If you have an existing docker toolbox, you might think you can upgrade [Docker Machine](https://docs.docker.com/machine/install-machine/) binaries directly (either from URL or `docker-machine upgrade default`) and it will take care of itself.  This is not going to help -- `docker-machine` will be `1.10.3` while `docker` is still `1.8.3` or whatever your previous version is.
->
-> You are much better off using Docker Toolbox DMG file to upgrade, which will take care of all the binaries at once.
-
-Once you've installed Docker Toolbox, install a VM with Docker Machine using the VirtualBox provider:
-
-```
-docker-machine create --driver=virtualbox default
-docker-machine ls
-eval "$(docker-machine env default)"
-```
-
-Then start up a container:
+Once you've installed Docker Community Edition, click the docker icon in Launchpad. Then start up a container:
 
 ```
 docker run hello-world
@@ -101,6 +82,8 @@ If you are a complete Docker newbie, you should probably follow the [series of t
 * [`docker rm`](https://docs.docker.com/engine/reference/commandline/rm) deletes a container.
 * [`docker update`](https://docs.docker.com/engine/reference/commandline/update/) updates a container's resource limits.
 
+Normally if you run a container without options it will start and stop immediately, if you want keep it running you can use the command, `docker run -td container_id` this will use the option `-t` that will allocate a pseudo-TTY session and `-d` that will detach automatically the container (run container in background and print container ID).
+
 If you want a transient container, `docker run --rm` will remove the container after it stops.
 
 If you want to map a directory on the host to a docker container, `docker run -v $HOSTDIR:$DOCKERDIR`. Also see [Volumes](https://github.com/wsargent/docker-cheat-sheet/#volumes).
@@ -108,6 +91,8 @@ If you want to map a directory on the host to a docker container, `docker run -v
 If you want to remove also the volumes associated with the container, the deletion of the container must include the `-v` switch like in `docker rm -v`.
 
 There's also a [logging driver](https://docs.docker.com/engine/admin/logging/overview/) available for individual containers in docker 1.10. To run docker with a custom log driver (i.e., to syslog), use `docker run --log-driver=syslog`.
+
+Another useful option is `docker run --name yourname docker_image` because when you specify the `--name` inside the run command this will allow you to start and stop a container by calling it with the name the you specified when you created it.
 
 ### Starting and Stopping
 
@@ -223,9 +208,25 @@ Images are just [templates for docker containers](https://docs.docker.com/engine
 * [`docker history`](https://docs.docker.com/engine/reference/commandline/history) shows history of image.
 * [`docker tag`](https://docs.docker.com/engine/reference/commandline/tag) tags an image to a name (local or registry).
 
+## Checking Docker Version 
+
+It is very important that you always know the current version of Docker you are currently running on at any point in time.This is very helpful because you get to know what features are compatible with what you have running. This is also important because you know what containers to run from the docker store when you are trying to get template containers. That said let see how to know what version of docker we have running currently
+
+* ['docker version'](https://docs.docker.com/engine/reference/commandline/version/)   check what version of docker you have running 
+* [docker version [OPTIONS]]
+
+Get the server version
+$ docker version --format '{{.Server.Version}}'
+
+1.8.0
+Dump raw JSON data
+$ docker version --format '{{json .}}'
+
+{"Client":{"Version":"1.8.0","ApiVersion":"1.20","GitCommit":"f5bae0a","GoVersion":"go1.4.2","Os":"linux","Arch":"am"}
+
 ### Cleaning up
 
-While you can use the `docker rmi` command to remove specific images, there's a tool called [docker-gc](https://github.com/spotify/docker-gc) that will clean up images that are no longer used by any containers in a safe manner.
+While you can use the `docker rmi` command to remove specific images, there's a tool called [docker-gc](https://github.com/spotify/docker-gc) that will safely clean up images that are no longer used by any containers.
 
 ### Load/Save image
 
@@ -251,7 +252,7 @@ Export an existing container:
 docker export my_container | gzip > my_container.tar.gz
 ```
 
-### Difference between loading a saved image and importing an exported container as an image ?
+### Difference between loading a saved image and importing an exported container as an image
 
 Loading an image using the `load` command creates a new image including its history.  
 Importing a container as an image using the `import` command creates a new image excluding the history which results in a smaller image size compared to loading an image.
@@ -319,19 +320,20 @@ Here are some common text editors and their syntax highlighting modules you coul
 * [Vim](https://github.com/ekalinin/Dockerfile.vim)
 * [Emacs](https://github.com/spotify/dockerfile-mode)
 * [TextMate](https://github.com/docker/docker/tree/master/contrib/syntax/textmate)
-* For a most comprehensive list of editors and IDEs, check [Docker meets the IDE] (https://domeide.github.io/)
+* [VS Code](https://github.com/Microsoft/vscode-docker)
+* Also see [Docker meets the IDE](https://domeide.github.io/)
 
 ### Instructions
 
 * [.dockerignore](https://docs.docker.com/engine/reference/builder/#dockerignore-file)
 * [FROM](https://docs.docker.com/engine/reference/builder/#from) Sets the Base Image for subsequent instructions.
-* [MAINTAINER](https://docs.docker.com/engine/reference/builder/#maintainer) Set the Author field of the generated images..
+* [MAINTAINER (deprecated - use LABEL instead)](https://docs.docker.com/engine/reference/builder/#maintainer-deprecated) Set the Author field of the generated images.
 * [RUN](https://docs.docker.com/engine/reference/builder/#run) execute any commands in a new layer on top of the current image and commit the results.
 * [CMD](https://docs.docker.com/engine/reference/builder/#cmd) provide defaults for an executing container.
 * [EXPOSE](https://docs.docker.com/engine/reference/builder/#expose) informs Docker that the container listens on the specified network ports at runtime.  NOTE: does not actually make ports accessible.
 * [ENV](https://docs.docker.com/engine/reference/builder/#env) sets environment variable.
 * [ADD](https://docs.docker.com/engine/reference/builder/#add) copies new files, directories or remote file to container.  Invalidates caches. Avoid `ADD` and use `COPY` instead.
-* [COPY](https://docs.docker.com/engine/reference/builder/#copy) copies new files or directories to container.
+* [COPY](https://docs.docker.com/engine/reference/builder/#copy) copies new files or directories to container.  Note that this only copies as root, so you have to chown manually regardless of your USER / WORKDIR setting.  See https://github.com/moby/moby/issues/30110
 * [ENTRYPOINT](https://docs.docker.com/engine/reference/builder/#entrypoint) configures a container that will run as an executable.
 * [VOLUME](https://docs.docker.com/engine/reference/builder/#volume) creates a mount point for externally mounted volumes or other containers.
 * [USER](https://docs.docker.com/engine/reference/builder/#user) sets the user name for following RUN / CMD / ENTRYPOINT commands.
@@ -352,16 +354,17 @@ Here are some common text editors and their syntax highlighting modules you coul
 * [Michael Crosby](http://crosbymichael.com/) has some more [Dockerfiles best practices](http://crosbymichael.com/dockerfile-best-practices.html) / [take 2](http://crosbymichael.com/dockerfile-best-practices-take-2.html).
 * [Building Good Docker Images](http://jonathan.bergknoff.com/journal/building-good-docker-images) / [Building Better Docker Images](http://jonathan.bergknoff.com/journal/building-better-docker-images)
 * [Managing Container Configuration with Metadata](https://speakerdeck.com/garethr/managing-container-configuration-with-metadata)
+* [How to write excellent Dockerfiles](https://rock-it.pl/how-to-write-excellent-dockerfiles/)
 
 ## Layers
 
 The versioned filesystem in Docker is based on layers. They're like [git commits or changesets for filesystems](https://docs.docker.com/engine/userguide/storagedriver/imagesandcontainers/).
 
-Note that if you're using [aufs](https://en.wikipedia.org/wiki/Aufs) as your filesystem, Docker does not always remove data volumes containers layers when you delete a container! See [PR 8484](https://github.com/docker/docker/pull/8484) for more details.
-
 ## Links
 
 Links are how Docker containers talk to each other [through TCP/IP ports](https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/). [Linking into Redis](https://docs.docker.com/engine/examples/running_redis_service/) and [Atlassian](https://blogs.atlassian.com/2013/11/docker-all-the-things-at-atlassian-automation-and-wiring/) show worked examples. You can also resolve [links by hostname](https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/#/updating-the-etchosts-file).
+
+This has been deprected to some extent by [user-defined networks](https://docs.docker.com/engine/userguide/networking/#user-defined-networks).
 
 NOTE: If you want containers to ONLY communicate with each other through links, start the docker daemon with `-icc=false` to disable inter process communication.
 
@@ -422,6 +425,8 @@ You can use remote NFS volumes if you're [feeling brave](https://docs.docker.com
 
 You may also consider running data-only containers as described [here](http://container42.com/2013/12/16/persistent-volumes-with-docker-container-as-volume-pattern/) to provide some data portability.
 
+[Be aware that you can mount files as volumes.](#volumes-can-be-files)
+
 ## Exposing ports
 
 Exposing incoming ports through the host container is [fiddly but doable](https://docs.docker.com/engine/reference/run/#expose-incoming-ports).
@@ -471,7 +476,6 @@ This is where general Docker best practices and war stories go:
 * [The Rabbit Hole of Using Docker in Automated Tests](http://gregoryszorc.com/blog/2014/10/16/the-rabbit-hole-of-using-docker-in-automated-tests/)
 * [Bridget Kromhout](https://twitter.com/bridgetkromhout) has a useful blog post on [running Docker in production](http://sysadvent.blogspot.co.uk/2014/12/day-1-docker-in-production-reality-not.html) at Dramafever.
 * There's also a best practices [blog post](http://developers.lyst.com/devops/2014/12/08/docker/) from Lyst.
-* [A Docker Dev Environment in 24 Hours!](https://engineering.salesforceiq.com/2013/11/05/a-docker-dev-environment-in-24-hours-part-2-of-2.html)
 * [Building a Development Environment With Docker](https://tersesystems.com/2013/11/20/building-a-development-environment-with-docker/)
 * [Discourse in a Docker Container](https://samsaffron.com/archive/2013/11/07/discourse-in-a-docker-container)
 
@@ -483,7 +487,7 @@ First things first: Docker runs as root. If you are in the `docker` group, you e
 
 Docker should not be your only defense. You should secure and harden it.
 
-For an understanding of what containers leave exposed, you should read is [Understanding and Hardening Linux Containers](https://www.nccgroup.trust/globalassets/our-research/us/whitepapers/2016/april/ncc_group_understanding_hardening_linux_containers-10pdf) by [Aaron Grattafiori](https://twitter.com/dyn___). This is a complete and comprehensive guide to the issues involved with containers, with a plethora of links and footnotes leading on to yet more useful content. The security tips following are useful if you've already hardened containers in the past, but are not a substitute for understanding.
+For an understanding of what containers leave exposed, you should read [Understanding and Hardening Linux Containers](https://www.nccgroup.trust/globalassets/our-research/us/whitepapers/2016/april/ncc_group_understanding_hardening_linux_containers-1-1.pdf) by [Aaron Grattafiori](https://twitter.com/dyn___). This is a complete and comprehensive guide to the issues involved with containers, with a plethora of links and footnotes leading on to yet more useful content. The security tips following are useful if you've already hardened containers in the past, but are not a substitute for understanding.
 
 ### Security Tips
 
@@ -607,7 +611,7 @@ docker commit -run='{"Cmd":["postgres", "-too -many -opts"]}' $(dl) postgres
 ### Get IP address
 
 ```
-docker inspect $(dl) | grep IPAddress | cut -d '"' -f 4
+docker inspect $(dl) | grep -wm1 IPAddress | cut -d '"' -f 4
 ```
 
 or install [jq](https://stedolan.github.io/jq/):
@@ -621,6 +625,17 @@ or using a [go template](https://docs.docker.com/engine/reference/commandline/in
 ```
 docker inspect -f '{{ .NetworkSettings.IPAddress }}' <container_name>
 ```
+
+or when building an image from Dockerfile, when you want to pass in a build argument:
+
+```
+DOCKER_HOST_IP=`ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1`
+echo DOCKER_HOST_IP = $DOCKER_HOST_IP
+docker build \
+  --build-arg ARTIFACTORY_ADDRESS=$DOCKER_HOST_IP 
+  -t sometag \
+  some-directory/
+ ```
 
 ### Get port mapping
 
@@ -646,6 +661,12 @@ docker run --rm ubuntu env
 docker kill $(docker ps -q)
 ```
 
+### Delete all containers (force!! running or stopped containers)
+
+```
+docker rm -f $(docker ps -qa)
+```
+
 ### Delete old containers
 
 ```
@@ -656,6 +677,12 @@ docker ps -a | grep 'weeks ago' | awk '{print $1}' | xargs docker rm
 
 ```
 docker rm -v $(docker ps -a -q -f status=exited)
+```
+
+### Delete containers after stopping
+
+```
+docker stop $(docker ps -aq) && docker rm -v $(docker ps -aq)
 ```
 
 ### Delete dangling images
@@ -686,7 +713,7 @@ In 1.9.0, the filter `dangling=false` does _not_ work - it is ignored and will l
 docker images -viz | dot -Tpng -o docker.png
 ```
 
-### Slimming down Docker containers (see [Intercity Blog](http://bit.ly/1Wwo61N))
+### Slimming down Docker containers
 
 - Cleaning APT in a RUN layer
 
@@ -738,6 +765,34 @@ For all containers listed by image:
 docker ps -a -f ancestor=ubuntu
 ```
 
+Remove all untagged images
+```
+docker rmi $(docker images | grep “^” | awk '{split($0,a," "); print a[3]}')
+```
+
+Remove container by a regular expression
+```
+docker ps -a | grep wildfly | awk '{print $1}' | xargs docker rm -f
+```
+Remove all exited containers
+```
+docker rm -f $(docker ps -a | grep Exit | awk '{ print $1 }')
+```
+
+### Volumes can be files
+
+Be aware that you can mount files as volumes. For example you can inject a configuration file like this:
+
+``` bash
+# copy file from container
+docker run --rm httpd cat /usr/local/apache2/conf/httpd.conf > httpd.conf
+
+# edit file
+vim httpd.conf
+
+# start container with modified configuration
+docker run --rm -ti -v "$PWD/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro" -p "80:80" httpd
+```
 
 ## Contributing
 
